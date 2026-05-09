@@ -151,7 +151,7 @@ docker rm -f shortist-test-postgres
 
 Каждый запрос считается успешным только если API вернул статус `200` и поле `short_id`.
 
-Перед запуском нагрузки поднимите тестовую БД, задайте переменные окружения и создайте таблицы:
+Перед запуском нагрузки поднимите тестовую БД и задайте переменные окружения:
 
 ```bash
 cd /Users/deniskockin/progs/IPR/dz2/shortist
@@ -171,20 +171,6 @@ export DB_HOST=localhost
 export DB_PORT=55432
 export DB_NAME=shortist_test
 export SECRET=test-secret
-
-python3 - <<'PY'
-import asyncio
-from src.database import Base, async_engine
-from src.auth.models import User
-from src.links.models import Link
-
-async def main():
-    async with async_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-        await conn.run_sync(Base.metadata.create_all)
-
-asyncio.run(main())
-PY
 ```
 
 Запустите сервис в отдельном терминале:
@@ -197,6 +183,12 @@ python3 -m uvicorn src.main:app --host 127.0.0.1 --port 8000
 
 ```bash
 bash scripts/run_load_tests.sh smoke
+```
+
+Скрипт перед запуском автоматически пересоздает таблицы в тестовой БД. Если нужно запустить нагрузку без очистки БД, используйте:
+
+```bash
+RESET_DB=0 bash scripts/run_load_tests.sh smoke
 ```
 
 Ступенчатый прогон помогает увидеть, при каком числе виртуальных пользователей начинают расти задержки или ошибки:

@@ -4,6 +4,7 @@ set -euo pipefail
 HOST="${HOST:-http://127.0.0.1:8000}"
 REPORT_ROOT="${REPORT_ROOT:-load_reports}"
 RUN_ID="${RUN_ID:-$(date '+%Y-%m-%d_%H-%M-%S')}"
+RESET_DB="${RESET_DB:-1}"
 
 run_locust() {
   if command -v uvx >/dev/null 2>&1; then
@@ -50,8 +51,20 @@ INFO
     2>&1 | tee "${console_log}"
 }
 
+prepare_database() {
+  if [[ "${RESET_DB}" != "1" ]]; then
+    echo "Skipping load test database reset because RESET_DB=${RESET_DB}"
+    return
+  fi
+
+  echo "Preparing load test database"
+  python3 scripts/prepare_load_db.py
+}
+
 main() {
   local mode="${1:-all}"
+
+  prepare_database
 
   case "${mode}" in
     smoke)
